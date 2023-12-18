@@ -8,8 +8,10 @@ from dotenv import load_dotenv
 
 dotenv_exists = os.path.exists(".env")
 if not dotenv_exists:
-    print("Please create .env file first.")
-    exit(1)
+    print("No .env file found.")
+for env in ["ALIST_HOST", "ALIST_USERNAME", "ALIST_PASSWORD"]:
+    if env not in os.environ:
+        print(f"{env} is not found in the environment variables.")
 load_dotenv()
 client = AlistClient(os.getenv("ALIST_HOST"), os.getenv("ALIST_USERNAME"), os.getenv("ALIST_PASSWORD"))
 

@@ -7,7 +7,7 @@ class AlistClient:
         self.host = host
         self.__username__ = username
         self.__password__ = password
-        self.client = httpx.Client(base_url=f"https://{self.host}")
+        self.client = httpx.Client(base_url=f"https://{self.host}", timeout=120)
         self.__token__ = self.__get_token__()
 
     def __get_token__(self):

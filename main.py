@@ -72,6 +72,7 @@ def raw_resource_handler(overwrite: bool = True):
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
         futures = {executor.submit(upload_file_executor, file, "/raw/", client, overwrite) for file in raw_file}
+        done, not_done = concurrent.futures.wait(futures, timeout=120)
 
 
 def main():

@@ -5,6 +5,11 @@ import argparse
 from AlistClient.AlistClient import AlistClient
 from dotenv import load_dotenv
 
+
+dotenv_exists = os.path.exists(".env")
+if not dotenv_exists:
+    print("Please create .env file first.")
+    exit(1)
 load_dotenv()
 client = AlistClient(os.getenv("ALIST_HOST"), os.getenv("ALIST_USERNAME"), os.getenv("ALIST_PASSWORD"))
 
@@ -86,4 +91,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print(f"Setting host to {os.getenv('ALIST_HOST')}")
     main()

@@ -5,7 +5,6 @@ import argparse
 from AlistClient.AlistClient import AlistClient
 from dotenv import load_dotenv
 
-
 dotenv_exists = os.path.exists(".env")
 if not dotenv_exists:
     print("No .env file found.")
@@ -51,7 +50,7 @@ def zip_resource_handler(overwrite: bool = True):
 
 
 def raw_resource_handler(overwrite: bool = True):
-    # list all files in folder and subfolder under /Snap.Static-main
+    # list all files in folder and subdirectory under /Snap.Static-main
     raw_file = list(file.replace("\\", "/") for file in get_all_files("Snap.Static-main") if file.endswith(".png"))
     all_remote_sub_dirs = []
     for file in raw_file:
@@ -75,22 +74,35 @@ def raw_resource_handler(overwrite: bool = True):
         done, not_done = concurrent.futures.wait(futures, timeout=120)
 
 
+def generic_resource_handler(local_file_path: str, target_remote_path: str, overwrite: bool = True):
+    result = client.list_path(target_remote_path)
+    if "not found" in result["message"]:
+        print(f"{target_remote_path} not found. Creating...")
+        result = client.create_dir(target_remote_path)
+        print(f"Create {target_remote_path} result: {result}")
+    else:
+        print(f"{target_remote_path} found.")
+    upload_file_executor(local_file_path, target_remote_path, client, overwrite)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Upload resource to Alist")
-    parser.add_argument("--zip", action="store_true", help="Upload zip file to /zip")
-    parser.add_argument("--raw", action="store_true", help="Upload raw file to /raw")
+    parser.add_argument("--type", required=True, help="Specify the type of files to upload.")
+    parser.add_argument("--file", help="Specify the file to upload, only used for 'generic' type.")
+    parser.add_argument("--target", help="Specify the target remote path, only used for 'generic' type.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing file")
     args = parser.parse_args()
-    if args.overwrite:
-        overwrite = True
-    else:
-        overwrite = False
-    if not args.zip and not args.raw:
-        print("Please specify --zip or --raw")
-    if args.zip:
+    overwrite = args.overwrite
+    if args.type == "zip":
         zip_resource_handler(overwrite)
-    if args.raw:
+    elif args.type == "raw":
         raw_resource_handler(overwrite)
+    elif args.type == "generic":
+        local_file_path = args.file
+        target_remote_path = args.target
+        generic_resource_handler(local_file_path, target_remote_path, overwrite)
+    else:
+        print(f"Invalid type: {args.type}. Please specify 'zip' or 'raw'.")
 
 
 if __name__ == "__main__":

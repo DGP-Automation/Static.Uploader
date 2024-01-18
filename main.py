@@ -87,11 +87,21 @@ def generic_resource_handler(local_file_path: str, target_remote_path: str, over
 
 def main():
     parser = argparse.ArgumentParser(description="Upload resource to Alist")
+    # specify the type of files to upload
     parser.add_argument("--type", required=True, help="Specify the type of files to upload.")
     parser.add_argument("--file", help="Specify the file to upload, only used for 'generic' type.")
     parser.add_argument("--target", help="Specify the target remote path, only used for 'generic' type.")
+    # overwrite Alist login
+    parser.add_argument("--host", help="Alist host")
+    parser.add_argument("--username", help="Alist username")
+    parser.add_argument("--password", help="Alist password")
+    # overwrite existing file
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing file")
     args = parser.parse_args()
+
+    if args.host and args.username and args.password:
+        global client
+        client = AlistClient(args.host, args.username, args.password)
     overwrite = args.overwrite
     if args.type == "zip":
         zip_resource_handler(overwrite)

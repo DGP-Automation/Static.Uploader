@@ -22,6 +22,7 @@ class AlistClient:
             raise ValueError(f"Failed to get token; {response_json['message']}")
 
     def stream_upload(self, local_file_path: str, target_dir: str, overwrite: bool = True):
+        print(f"Uploading {local_file_path} to https://{self.host}{target_dir}...")
         file_name = local_file_path.split("/")[-1]
         if file_name.endswith(".png"):
             MMIE_type = "image/png"

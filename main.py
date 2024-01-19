@@ -1,19 +1,24 @@
 import os
 import concurrent.futures
+import subprocess
+
 import httpx
 import argparse
 from AlistClient.AlistClient import AlistClient
 from dotenv import load_dotenv
 
+ENV_MISSING = False
 dotenv_exists = os.path.exists(".env")
 if not dotenv_exists:
     print("No .env file found.")
 for env in ["ALIST_HOST", "ALIST_USERNAME", "ALIST_PASSWORD"]:
     if env not in os.environ:
+        ENV_MISSING = True
         print(f"{env} is not found in the environment variables.")
 load_dotenv()
-client = AlistClient(os.getenv("ALIST_HOST"), os.getenv("ALIST_USERNAME"), os.getenv("ALIST_PASSWORD"))
-
+if not ENV_MISSING:
+    client = AlistClient(os.getenv("ALIST_HOST"), os.getenv("ALIST_USERNAME"), os.getenv("ALIST_PASSWORD"))
+print("-"*10)
 
 def get_all_files(directory):
     file_paths = []
@@ -24,7 +29,7 @@ def get_all_files(directory):
 
 
 def upload_file_executor(local_file_path: str, target_path: str, client_instance: AlistClient, overwrite: bool = True):
-    print(f"Starting upload task: {local_file_path}")
+    print(f"Starting snap.static upload task: {local_file_path} to remote path: {target_path}, overwrite: {overwrite}")
     this_subdir = (local_file_path.replace("Snap.Static-main/", "").
                    replace("Snap.Static.Zip-main", "").
                    replace(local_file_path.split("/")[-1], ""))
@@ -32,6 +37,17 @@ def upload_file_executor(local_file_path: str, target_path: str, client_instance
     while True:
         try:
             res = client_instance.stream_upload(local_file_path, target_path + this_subdir, overwrite)
+            print(f"Upload {local_file_path} result: {res}")
+            break
+        except httpx.ReadTimeout:
+            print(f"Upload {local_file_path} ReadTimeout. Please check this later.")
+
+
+def generic_upload_file_executor(local_file_path: str, target_path: str, client_instance: AlistClient, overwrite: bool = True):
+    print(f"Starting generic upload task: {local_file_path} to remote path: {target_path}, overwrite: {overwrite}")
+    while True:
+        try:
+            res = client_instance.stream_upload(local_file_path, target_path, overwrite)
             print(f"Upload {local_file_path} result: {res}")
             break
         except httpx.ReadTimeout:
@@ -82,7 +98,7 @@ def generic_resource_handler(local_file_path: str, target_remote_path: str, over
         print(f"Create {target_remote_path} result: {result}")
     else:
         print(f"{target_remote_path} found.")
-    upload_file_executor(local_file_path, target_remote_path, client, overwrite)
+    generic_upload_file_executor(local_file_path, target_remote_path, client, overwrite)
 
 
 def main():
@@ -104,8 +120,14 @@ def main():
         client = AlistClient(args.host, args.username, args.password)
     overwrite = args.overwrite
     if args.type == "zip":
+        if ENV_MISSING:
+            print("Missing environment variables. Please check .env file or set environment variables.")
+            return
         zip_resource_handler(overwrite)
     elif args.type == "raw":
+        if ENV_MISSING:
+            print("Missing environment variables. Please check .env file or set environment variables.")
+            return
         raw_resource_handler(overwrite)
     elif args.type == "generic":
         local_file_path = args.file
@@ -116,5 +138,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print(f"Setting host to {os.getenv('ALIST_HOST')}")
     main()

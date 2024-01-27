@@ -3,13 +3,13 @@
 A simple tool to upload files to the Alist server.
 
 ## Available options:
-`--type`: `zip`, `raw`, `generic`
-`--file`: local file path to upload
-`--target`: remote file path
-`--host`: alist server host, or set it in system environment
-`--username`: alist server username, or set it in system environment
-`--password`: alist server password, or set it in system environment
-`--overwrite`: overwrite remote file if exists
+- `--type`: `zip`, `raw`, `generic`
+- `--file`: local file path to upload
+- `--target`: remote file path
+- `--host`: alist server host, or set it in system environment
+- `--username`: alist server username, or set it in system environment
+- `--password`: alist server password, or set it in system environment
+- `--overwrite`: overwrite remote file if exists
 
 ---
 

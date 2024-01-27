@@ -1,7 +1,5 @@
 import os
 import concurrent.futures
-import subprocess
-
 import httpx
 import argparse
 from AlistClient.AlistClient import AlistClient
@@ -18,7 +16,8 @@ for env in ["ALIST_HOST", "ALIST_USERNAME", "ALIST_PASSWORD"]:
 load_dotenv()
 if not ENV_MISSING:
     client = AlistClient(os.getenv("ALIST_HOST"), os.getenv("ALIST_USERNAME"), os.getenv("ALIST_PASSWORD"))
-print("-"*10)
+print("-" * 10)
+
 
 def get_all_files(directory):
     file_paths = []
@@ -43,7 +42,8 @@ def upload_file_executor(local_file_path: str, target_path: str, client_instance
             print(f"Upload {local_file_path} ReadTimeout. Please check this later.")
 
 
-def generic_upload_file_executor(local_file_path: str, target_path: str, client_instance: AlistClient, overwrite: bool = True):
+def generic_upload_file_executor(local_file_path: str, target_path: str, client_instance: AlistClient,
+                                 overwrite: bool = True):
     print(f"Starting generic upload task: {local_file_path} to remote path: {target_path}, overwrite: {overwrite}")
     while True:
         try:
@@ -54,14 +54,14 @@ def generic_upload_file_executor(local_file_path: str, target_path: str, client_
             print(f"Upload {local_file_path} ReadTimeout. Please check this later.")
 
 
-def zip_resource_handler(overwrite: bool = True):
-    result = client.create_dir("/zip")
-    print(f"Create /zip result: {result}")
+def zip_resource_handler(remote_path: str = "/zip", overwrite: bool = True):
+    result = client.create_dir(remote_path)
+    print(f"Create {remote_path} result: {result}")
 
     list_dir = list(f"Snap.Static.Zip-main/{f}" for f in os.listdir("Snap.Static.Zip-main") if f.endswith(".zip"))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-        futures = {executor.submit(upload_file_executor, file, "/zip/", client, overwrite) for file in list_dir}
+        futures = {executor.submit(upload_file_executor, file, remote_path, client, overwrite) for file in list_dir}
         done, not_done = concurrent.futures.wait(futures, timeout=120)
 
 
@@ -106,7 +106,7 @@ def main():
     # specify the type of files to upload
     parser.add_argument("--type", required=True, help="Specify the type of files to upload.")
     parser.add_argument("--file", help="Specify the file to upload, only used for 'generic' type.")
-    parser.add_argument("--target", help="Specify the target remote path, only used for 'generic' type.")
+    parser.add_argument("--target", help="Specify the target remote path, only used for 'generic' and 'zip' type.")
     # overwrite Alist login
     parser.add_argument("--host", help="Alist host")
     parser.add_argument("--username", help="Alist username")
@@ -123,7 +123,7 @@ def main():
         if ENV_MISSING:
             print("Missing environment variables. Please check .env file or set environment variables.")
             return
-        zip_resource_handler(overwrite)
+        zip_resource_handler(args.target, overwrite)
     elif args.type == "raw":
         if ENV_MISSING:
             print("Missing environment variables. Please check .env file or set environment variables.")

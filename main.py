@@ -60,9 +60,11 @@ def zip_resource_handler(remote_path: str = "/zip", overwrite: bool = True):
 
     list_dir = list(f"Snap.Static.Zip-main/{f}" for f in os.listdir("Snap.Static.Zip-main") if f.endswith(".zip"))
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+    cpu_count = 4 if os.cpu_count() > 4 else os.cpu_count()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=cpu_count) as executor:
         futures = {executor.submit(upload_file_executor, file, remote_path, client, overwrite) for file in list_dir}
-        done, not_done = concurrent.futures.wait(futures, timeout=120)
+        done, not_done = concurrent.futures.wait(futures, timeout=None)
 
 
 def raw_resource_handler(overwrite: bool = True):

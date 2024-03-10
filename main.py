@@ -58,23 +58,24 @@ def zip_resource_handler(remote_path: str = "/zip", overwrite: bool = True):
     result = client.create_dir(remote_path)
     print(f"Create {remote_path} result: {result}")
 
-    list_dir = list(f"Snap.Static.Zip-main/{f}" for f in os.listdir("Snap.Static.Zip-main") if f.endswith(".zip"))
+    list_dir = list(f"Snap.Static.Zip-main/{f}" for f in os.listdir("Snap.Static.Zip-main") if f.endswith(".zip")
+                    and "all" in f)
 
-    cpu_count = 4 if os.cpu_count() > 4 else os.cpu_count()
+    cpu_count = 1 if os.cpu_count() > 1 else os.cpu_count()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=cpu_count) as executor:
         futures = {executor.submit(upload_file_executor, file, remote_path, client, overwrite) for file in list_dir}
         done, not_done = concurrent.futures.wait(futures, timeout=None)
 
 
-def raw_resource_handler(overwrite: bool = True):
+def raw_resource_handler(remote_path: str = "/raw", overwrite: bool = True):
     # list all files in folder and subdirectory under /Snap.Static-main
     raw_file = list(file.replace("\\", "/") for file in get_all_files("Snap.Static-main") if file.endswith(".png"))
     all_remote_sub_dirs = []
     for file in raw_file:
         file_name = file.split("/")[-1]
         subdir = file.replace("Snap.Static-main/", "").replace(file_name, "")
-        file_remote_path = f'/raw/{subdir}'
+        file_remote_path = f'{remote_path}/{subdir}'
         all_remote_sub_dirs.append(file_remote_path)
     all_remote_sub_dirs = list(set(all_remote_sub_dirs))
 
@@ -122,6 +123,8 @@ def main():
         client = AlistClient(args.host, args.username, args.password)
     overwrite = args.overwrite
     if args.type == "zip":
+        # Needs to set ALIST_HOST, ALIST_USERNAME, ALIST_PASSWORD in environment variables or .env file
+        # Use 1Password to load it in the GitHub Actions
         if ENV_MISSING:
             print("Missing environment variables. Please check .env file or set environment variables.")
             return
@@ -130,7 +133,7 @@ def main():
         if ENV_MISSING:
             print("Missing environment variables. Please check .env file or set environment variables.")
             return
-        raw_resource_handler(overwrite)
+        raw_resource_handler(args.target, overwrite)
     elif args.type == "generic":
         local_file_path = args.file
         target_remote_path = args.target

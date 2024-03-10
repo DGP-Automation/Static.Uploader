@@ -87,9 +87,13 @@ def raw_resource_handler(remote_path: str = "/raw", overwrite: bool = True):
             print(f"Create {sub_dir} result: {result}")
         else:
             print(f"{sub_dir} found.")
+            
+    # remote_path needs end with /
+    if not remote_path.endswith("/"):
+        remote_path = remote_path + "/"
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-        futures = {executor.submit(upload_file_executor, file, "/raw/", client, overwrite) for file in raw_file}
+        futures = {executor.submit(upload_file_executor, file, remote_path, client, overwrite) for file in raw_file}
         done, not_done = concurrent.futures.wait(futures, timeout=120)
 
 

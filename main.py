@@ -58,8 +58,7 @@ def zip_resource_handler(remote_path: str = "/zip", overwrite: bool = True):
     result = client.create_dir(remote_path)
     print(f"Create {remote_path} result: {result}")
 
-    list_dir = list(f"Snap.Static.Zip-main/{f}" for f in os.listdir("Snap.Static.Zip-main") if f.endswith(".zip")
-                    and "all" in f)
+    list_dir = list(f"Snap.Static.Zip-main/{f}" for f in os.listdir("Snap.Static.Zip-main") if f.endswith(".zip"))
 
     cpu_count = 1 if os.cpu_count() > 1 else os.cpu_count()
 

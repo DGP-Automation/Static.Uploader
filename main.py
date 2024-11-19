@@ -27,7 +27,7 @@ def get_all_files(directory):
     return file_paths
 
 
-def upload_file_executor(local_file_path: str, target_path: str, client_instance: AlistClient, overwrite: bool = True):
+def snap_static_upload_file_executor(local_file_path: str, target_path: str, client_instance: AlistClient, overwrite: bool = True):
     print(f"Starting snap.static upload task: {local_file_path} to remote path: {target_path}, overwrite: {overwrite}")
     this_subdir = (local_file_path.replace("Snap.Static-main/", "").
                    replace("Snap.Static.Zip-main", "").
@@ -63,7 +63,7 @@ def zip_resource_handler(remote_path: str = "/zip", overwrite: bool = True):
     cpu_count = 1 if os.cpu_count() > 1 else os.cpu_count()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=cpu_count) as executor:
-        futures = {executor.submit(upload_file_executor, file, remote_path, client, overwrite) for file in list_dir}
+        futures = {executor.submit(snap_static_upload_file_executor, file, remote_path, client, overwrite) for file in list_dir}
         done, not_done = concurrent.futures.wait(futures, timeout=None)
 
 
@@ -92,7 +92,7 @@ def raw_resource_handler(remote_path: str = "/raw", overwrite: bool = True):
         remote_path = remote_path + "/"
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-        futures = {executor.submit(upload_file_executor, file, remote_path, client, overwrite) for file in raw_file}
+        futures = {executor.submit(snap_static_upload_file_executor, file, remote_path, client, overwrite) for file in raw_file}
         done, not_done = concurrent.futures.wait(futures, timeout=120)
 
 
